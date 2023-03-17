@@ -21,5 +21,10 @@ namespace Cila
 
         [Parameter("bytes", "payload", 3)]
         public byte[] Payload {get;set;}
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Payload,EventNumber); // probably we need to add aggregate ID here
+        }
     }
 }

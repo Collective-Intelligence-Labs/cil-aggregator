@@ -122,7 +122,7 @@ namespace Cila.OmniChain
     [FunctionOutput]
     public class PullEventsDTO: IFunctionOutputDTO
     {
-        [Parameter("DomainEvent[]",order:1)]
+        [Parameter("tuple(uint256,uint8,bytes)[]", 1)]
         public DomainEvent[] Events {get;set;}
     }
 }
