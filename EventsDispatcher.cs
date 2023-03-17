@@ -11,8 +11,9 @@ namespace Cila
             _handler = new EventsHandler();
         }
 
-        public void DispatchEvent(byte[] data){
-            var msg = OmniChainSerializer.DeserializeWithMessageType(data);
+        public void DispatchEvent(DomainEvent e){
+
+            var msg = OmniChainSerializer.DeserializeWithMessageType(e);
             //var methodInfo = _handler.GetType().GetMethod("Handle", new[] { msg.GetType() });
             //methodInfo.Invoke(_handler, new [] {msg });
             dynamic dynamicHandler = _handler;

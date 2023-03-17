@@ -4,8 +4,10 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 namespace Cila 
 {
     public enum DomainEventType {
-        NFTMinted = 0,
-        NFTTransfered = 1
+        Undefined = 0,
+        ItemMinted = 1,
+
+        ItemTransfered = 2
     }
 
     [FunctionOutput]

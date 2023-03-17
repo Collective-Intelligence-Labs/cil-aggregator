@@ -8,10 +8,8 @@ namespace Cila
 
         //List<IAggregateState> Aggregates {get;set;}
     
-        void Update();
-        IEnumerable<DomainEvent> GetNewEvents(int length);
-        void PushNewEvents(IEnumerable<DomainEvent> newEvents);
-
+        IEnumerable<DomainEvent> Update();
+    
         int Length {get;}
     }
 
@@ -28,39 +26,16 @@ namespace Cila
         {
         }
 
-        public IEnumerable<DomainEvent> GetNewEvents(int length)
-        {
-            if (length >= Length)
-            {
-                yield break;
-            }
-            for (int i = length - 1 ; i < Length; i++)
-            {
-                yield return _events[i];
-            } 
-        }
-
-        public void Update()
+        public IEnumerable<DomainEvent> Update()
         {
             var newEvents = ChainService.Pull(Length);
-            AddNewEvents(newEvents);
-        }
-
-        public void PushNewEvents(IEnumerable<DomainEvent> newEvents)
-        {
-            AddNewEvents(newEvents);
-        }
-
-        private void AddNewEvents(IEnumerable<DomainEvent> newEvents)
-        {
-            if (newEvents == null)
-            {
-                return;
-            }
             foreach (var e in newEvents)
             {
+                
                 _events.Add((int)e.EventNumber, e);
+                yield return e;
             }
+            
         }
     }
 }

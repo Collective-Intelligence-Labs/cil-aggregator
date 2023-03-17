@@ -2,16 +2,22 @@ using Cila.OmniChain;
 
 namespace Cila
 {
-
     public class AggregatorService
     {
         public string Id { get; private set; }
         private List<IExecutionChain> _chains;
 
+        private List<object> _eventStore;
+
+        private List<int> _eventsHashes;
+
+        private EventsDispatcher _dispatcher;
+
         public AggregatorService(OmniChainAggregatorSettings config)
         {
             _chains = new List<IExecutionChain>();
-            Id = config.RelayId;
+            _eventStore = new List<object>();
+            Id = config.AggregatorId;
             foreach (var item in config.Chains)
             {
                 var chain1 = new ExecutionChain();
@@ -27,9 +33,19 @@ namespace Cila
             Console.WriteLine("Current active chains: {0}", _chains.Count);
             foreach (var chain in _chains)
             {
-                chain.Update();
+                var current = chain.Length;
+                var newEvents = chain.Update();
+                foreach (var e in newEvents)
+                {
+                    if (!_eventsHashes.Contains(e.GetHashCode()))
+                    {
+                        _eventStore.Add(e);
+                        _dispatcher.DispatchEvent(e);
+                    }
+                }
             }
             // find new events and dispatch them to events dispatcher
         }
+
     }
 }
