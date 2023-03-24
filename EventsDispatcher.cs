@@ -13,12 +13,12 @@ namespace Cila
 
         public void DispatchEvent(DomainEvent e){
 
-            var msg = OmniChainSerializer.DeserializeWithMessageType(e);
-            //var methodInfo = _handler.GetType().GetMethod("Handle", new[] { msg.GetType() });
-            //methodInfo.Invoke(_handler, new [] {msg });
-            dynamic dynamicHandler = _handler;
-            dynamic dynamicMessage = msg;
-            dynamicHandler.Handle(dynamicMessage);
+            var msg = OmniChainSerializer.DeserializeEvent(e);
+            var methodInfo = _handler.GetType().GetMethod("Handle", new[] { msg.GetType() });
+            methodInfo.Invoke(_handler, new [] {msg });
+            //dynamic dynamicHandler = _handler;
+            //dynamic dynamicMessage = msg;
+            //dynamicHandler.Handle(dynamicMessage);
         }
     }
 }

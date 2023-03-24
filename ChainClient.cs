@@ -1,12 +1,13 @@
 
 using Nethereum.Web3;
 using Nethereum.Contracts;
-
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.RPC.Eth.DTOs;
 using System.Numerics;
 using Nethereum.Contracts.ContractHandlers;
 using Nethereum.JsonRpc.Client;
+using Nethereum.Hex.HexTypes;
+using OmniChain;
 
 namespace Cila.OmniChain
 {
@@ -22,12 +23,29 @@ namespace Cila.OmniChain
 
     interface IChainClient
     {
-        void Push(int position, IEnumerable<DomainEvent> events);
-        IEnumerable<DomainEvent> Pull(int position);
+        void Push(ulong position, IEnumerable<DomainEvent> events);
+        Task<string> PushAsync(ulong position, IEnumerable<DomainEvent> events);
+        IEnumerable<DomainEvent> Pull(ulong position);
+        Task<IEnumerable<DomainEvent>> PullAsync(ulong position);
     }
+
+   
 
     [Function("pull")]
     public class PullFuncation: FunctionMessage
+    {
+        [Parameter("address", "aggregateId", 1)]
+        public string AggregateId {get;set;}
+
+        [Parameter("uint", "startIndex", 2)]
+        public int StartIndex {get;set;}
+
+        [Parameter("uint", "limit", 3)]
+        public int Limit {get;set;}
+    }
+
+    [Function("pullBytes")]
+    public class PullBytesFuncation: FunctionMessage
     {
         [Parameter("address", "aggregateId", 1)]
         public string AggregateId {get;set;}
@@ -56,11 +74,15 @@ namespace Cila.OmniChain
     {
         private Web3 _web3;
         private ContractHandler _handler;
+        private Event<OmnichainEvent> _eventHandler;
+        private NewFilterInput _filterInput;
         private string _privateKey;
+
+        private string _singletonAggregateId;
 
         private Contract _contract;
 
-        public EthChainClient(string rpc, string contract, string privateKey, string abi)
+        public EthChainClient(string rpc, string contract, string privateKey, string abi, string singletonAggregateID)
         {
             
             _privateKey = privateKey;
@@ -69,60 +91,76 @@ namespace Cila.OmniChain
             _web3.Client.OverridingRequestInterceptor = new LoggingInterceptor();
             _handler = _web3.Eth.GetContractHandler(contract);
             _contract = _web3.Eth.GetContract(abi, contract);
+            _eventHandler = _handler.GetEvent<OmnichainEvent>();
+            _singletonAggregateId = singletonAggregateID;
+            var block = _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync().Result;
+            _filterInput = _eventHandler.CreateFilterInput(new BlockParameter(block.ToUlong() - 1024), BlockParameter.CreateLatest());
+            //
         }
 
         public const int MAX_LIMIT = 1000000;
-        public const string AGGREGATE_ID = "0x4215a6F868D07227f1e2827A6613d87A5961B5f6";
 
-
-        public async Task<IEnumerable<DomainEvent>> Pull(int position)
+        public async Task<IEnumerable<DomainEvent>> PullAsync(ulong position)
         {
-             Console.WriteLine("Chain Service Pull execution started from position: {0}, aggregate: {1}", position, AGGREGATE_ID);
-            var handler = _contract.GetFunction<PullFuncation>();
-            var request = new PullFuncation{
-                StartIndex = position,
-                Limit = MAX_LIMIT,
-                AggregateId = AGGREGATE_ID
-            };
+             Console.WriteLine("Chain Service Pull execution started from position: {0}, aggregate: {1}", position, _singletonAggregateId);
+             var handler = _handler.GetFunction<PullBytesFuncation>();
+             var request = new PullBytesFuncation{
+                StartIndex = (int)position,
+                    Limit = MAX_LIMIT,
+                    AggregateId = _singletonAggregateId
+                };
                 var result =  await handler.CallAsync<PullEventsDTO>(request);
                 Console.WriteLine("Chain Service Pull executed: {0}", result);
-                return result.Events;
-                //.Select(x=> {
-                  //  var result = new DomainEvent{Payload = x.Item3, EventType = x.Item2};
-                   // result.EventNumber = x.Item1; 
-                  //  return result;});
-
-            //return eventsDto.Events;
+                //return result.Events;   
+                return result.Events.Select(x=> OmniChainSerializer.DeserializeDomainEvent(x));
         }
 
-        public async Task<string> Push(int position, IEnumerable<DomainEvent> events)
+        public async Task<string> PushAsync(ulong position, IEnumerable<DomainEvent> events)
         {
             var handler = _handler.GetFunction<PushFuncation>();
             var request = new PushFuncation{
                 Events = events.ToList(),
-                Position = position,
-                AggregateId = "0"
+                Position = (int)position,
+                AggregateId = _singletonAggregateId
             };
             var result = await handler.CallAsync<string>(request);
             Console.WriteLine("Chain Service Push} executed: {0}", result);
             return result;
         }
 
-        IEnumerable<DomainEvent> IChainClient.Pull(int position)
+        public DomainEvent Deserizlize(byte[] data)
         {
-            return Pull(position).GetAwaiter().GetResult();
+            return new DomainEvent();
         }
 
-        void IChainClient.Push(int position, IEnumerable<DomainEvent> events)
+        IEnumerable<DomainEvent> IChainClient.Pull(ulong position)
         {
-            Push(position,events).GetAwaiter().GetResult();
+            return PullAsync(position).GetAwaiter().GetResult();
+        }
+
+        void IChainClient.Push(ulong position, IEnumerable<DomainEvent> events)
+        {
+            PushAsync(position,events).GetAwaiter().GetResult();
         }
     }
 
     [FunctionOutput]
     public class PullEventsDTO: IFunctionOutputDTO
     {
-        [Parameter("tuple(uint256,uint8,bytes)[]", 1)]
-        public DomainEvent[] Events {get;set;}
+        [Parameter("bytes[]",order:1)]
+        public List<byte[]> Events {get;set;}
+    }
+
+    [Event("OmnichainEvent")]
+    public class OmnichainEvent: IEventDTO
+    {
+        [Parameter("uint64", "_idx", 1, true)]
+        public ulong Version { get; set; }
+
+        [Parameter("uint8", "_type", 2, true)]
+        public byte Type { get; set; }
+
+        [Parameter("bytes", "_payload", 3, true)]
+        public byte[] Payload { get; set; }
     }
 }

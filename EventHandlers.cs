@@ -1,24 +1,25 @@
 
-using Example.Protobuf;
 
 internal class EventsHandler
 {
     private static Dictionary<string,Item> items = new Dictionary<string, Item>();
 
-    public void Handle(ItemMinted e){
-        if (items.ContainsKey(e.Hash))
+    public void Handle(NFTMintedPayload e){
+        string hash = e.Hash.ToString();
+        if (items.ContainsKey(hash))
         {
             return;
         };
-        items[e.Hash] = new Item(e.Hash,e.Owner);
+        items[hash] = new Item(hash,e.Owner.ToString());
     }
 
-    public void Hander (ItemTransfered e)
+    public void Handle(NFTTransferedPayload e)
     {
-        if (!items.ContainsKey(e.Hash))
+        string hash = e.Hash.ToString();
+        if (!items.ContainsKey(hash))
         {
             return;
         };
-        items[e.Hash].Owner = e.To;
+        items[hash].Owner = e.To.ToString();
     }
 }

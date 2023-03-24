@@ -22,6 +22,8 @@ namespace Cila
 
         public string AbiFile {get;set;}
 
+        public string SingletonAggregateID { get; set; }
+
         private string _abi;
         public string Abi {get {
                 _abi = _abi ?? File.ReadAllText(AbiFile);

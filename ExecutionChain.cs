@@ -28,11 +28,11 @@ namespace Cila
 
         public IEnumerable<DomainEvent> Update()
         {
-            var newEvents = ChainService.Pull(Length);
+            var newEvents = ChainService.Pull((ulong)Length);
             foreach (var e in newEvents)
             {
                 
-                _events.Add((int)e.EventNumber, e);
+                _events.Add((int)e.EvntIdx, e);
                 yield return e;
             }
             
