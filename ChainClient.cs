@@ -47,7 +47,7 @@ namespace Cila.OmniChain
     [Function("pullBytes")]
     public class PullBytesFuncation: FunctionMessage
     {
-        [Parameter("address", "aggregateId", 1)]
+        [Parameter("string", "aggregateId", 1)]
         public string AggregateId {get;set;}
 
         [Parameter("uint", "startIndex", 2)]
