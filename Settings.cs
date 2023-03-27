@@ -1,7 +1,11 @@
+using MongoDB.Driver;
+
 namespace Cila
 {
     public class OmniChainAggregatorSettings
     {
+        public  string MongoDBConnectionString {get;set;}
+
         public string AggregatorId {get;set;}
 
         public List<ExecutionChainSettings> Chains {get;set;}

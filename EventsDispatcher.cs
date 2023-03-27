@@ -1,3 +1,4 @@
+using System.Reflection;
 using OmniChain;
 
 namespace Cila
@@ -5,20 +6,49 @@ namespace Cila
 
     internal class EventsDispatcher
     {
-        private EventsHandler _handler;
+        private Dictionary<Type, List<Type>> _subscriptions = new Dictionary<Type, List<Type>>();
 
-        public EventsDispatcher(){
-            _handler = new EventsHandler();
+        public EventsDispatcher(IServiceLocator serviceLocator){
+            RegisterEventHanlders();
         }
 
         public void DispatchEvent(DomainEvent e){
 
             var msg = OmniChainSerializer.DeserializeEvent(e);
-            var methodInfo = _handler.GetType().GetMethod("Handle", new[] { msg.GetType() });
-            methodInfo.Invoke(_handler, new [] {msg });
-            //dynamic dynamicHandler = _handler;
-            //dynamic dynamicMessage = msg;
-            //dynamicHandler.Handle(dynamicMessage);
+            
+        }
+
+        public void Dispatch(object msg)
+        {
+            var msgType = msg.GetType();
+            var handlers = _subscriptions[msgType];
+            foreach (var handler in handlers)
+            {
+                var methodInfo = handler.GetType().GetMethod("Handle", new[] { msgType });
+                methodInfo.Invoke(handler, new [] { msg });
+            }
+        }
+
+        private void RegisterEventHanlders()
+        {
+            var eventHandlerMap = new Dictionary<Type, List<Type>>();
+            var eventHandlerTypes = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(type => typeof(IEventHandler).IsAssignableFrom(type) && type != typeof(IEventHandler))
+                .ToList();
+
+            foreach (var eventType in eventHandlerTypes.SelectMany(t => t.GetMethods()
+                .Where(m => m.Name == "Handle" && m.GetParameters().Length == 1)
+                .Select(m => m.GetParameters()[0].ParameterType)).Distinct())
+            {
+                eventHandlerMap[eventType] = new List<Type>();
+                foreach (var handlerType in eventHandlerTypes.Where(t => t.GetMethods()
+                    .Any(m => m.Name == "Handle" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == eventType)))
+                {
+                    eventHandlerMap[eventType].Add(handlerType);
+                }
+                _subscriptions = eventHandlerMap;
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 
 
-internal class EventsHandler
+public class EventsHandler: IEventHandler
 {
     private static Dictionary<string,Item> items = new Dictionary<string, Item>();
 
@@ -22,4 +22,9 @@ internal class EventsHandler
         };
         items[hash].Owner = e.To.ToString();
     }
+}
+
+public interface IEventHandler
+{
+    
 }
