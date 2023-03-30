@@ -13,12 +13,12 @@ namespace Cila
 
         private EventsDispatcher _dispatcher;
 
-        public AggregatorService(OmniChainAggregatorSettings config, IServiceLocator locator)
+        public AggregatorService(OmniChainAggregatorSettings config, EventsDispatcher dispatcher)
         {
             _chains = new List<IExecutionChain>();
             _eventStore = new List<object>();
             _eventsHashes = new List<int>();
-            _dispatcher = locator.GetService<EventsDispatcher>();
+            _dispatcher = dispatcher;
             Id = config.AggregatorId;
             foreach (var item in config.Chains)
             {

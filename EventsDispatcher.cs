@@ -4,11 +4,13 @@ using OmniChain;
 namespace Cila
 {
 
-    internal class EventsDispatcher
+    public class EventsDispatcher
     {
         private Dictionary<Type, List<Type>> _subscriptions = new Dictionary<Type, List<Type>>();
 
-        public EventsDispatcher(IServiceLocator serviceLocator){
+        private IServiceLocator serviceLocator = new ServiceLocator(Program._serviceProvider);
+
+        public EventsDispatcher(){
             RegisterEventHanlders();
         }
 
@@ -25,7 +27,8 @@ namespace Cila
             foreach (var handler in handlers)
             {
                 var methodInfo = handler.GetType().GetMethod("Handle", new[] { msgType });
-                methodInfo.Invoke(handler, new [] { msg });
+                var handlerInstance = serviceLocator.GetService(handler);
+                methodInfo.Invoke(handlerInstance, new [] { msg });
             }
         }
 

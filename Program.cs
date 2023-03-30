@@ -7,7 +7,7 @@ internal class Program
 {
     public  static OmniChainAggregatorSettings AppSettings {get;set;}
 
-    private static ServiceProvider _serviceProvider;
+    public static ServiceProvider _serviceProvider;
 
     private static void Main(string[] args)
     {
@@ -55,6 +55,10 @@ internal class Program
         // Register your dependencies here
         services.AddScoped<IDatabase, MongoDatabase>();
         services.AddScoped<IServiceLocator,ServiceLocator>();
+        services.AddSingleton(AppSettings);
+        services.AddScoped<AggregatorService>();
+        services.AddScoped<EventsDispatcher>();
+  
     
         // Build the service provider
         
@@ -66,6 +70,7 @@ internal class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddHostedService<WorkerService>();
+      
 
         var app = builder.Build();
 
