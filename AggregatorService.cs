@@ -1,4 +1,7 @@
 using Cila.OmniChain;
+using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
+using OmniChain;
 
 namespace Cila
 {
@@ -13,12 +16,15 @@ namespace Cila
 
         private EventsDispatcher _dispatcher;
 
-        public AggregatorService(OmniChainAggregatorSettings config, EventsDispatcher dispatcher)
+        private KafkaProducer _producer;
+
+        public AggregatorService(OmniChainAggregatorSettings config, EventsDispatcher dispatcher, KafkaProducer producer)
         {
             _chains = new List<IExecutionChain>();
             _eventStore = new List<object>();
             _eventsHashes = new List<int>();
             _dispatcher = dispatcher;
+            _producer = producer;
             Id = config.AggregatorId;
             foreach (var item in config.Chains)
             {
@@ -44,7 +50,19 @@ namespace Cila
                         _eventStore.Add(e);
                         _dispatcher.DispatchEvent(e);
                     }
+                    var infEvent = new InfrastructureEvent{
+                        Id = Guid.NewGuid().ToString(),
+                        EvntType = InfrastructureEventType.EventsAggregatedEvent,
+                        AggregatorId = Id,
+                        OperationId = Guid.NewGuid().ToString(),
+                    };
+                    infEvent.Events.Add( new DomainEventDto{
+                            Id = e.EvntIdx.ToString(),
+                            Timespan = Timestamp.FromDateTime(DateTime.UtcNow),
+                    });
+                    _producer.ProduceAsync("infr", infEvent);
                 }
+                    
             }
             // find new events and dispatch them to events dispatcher
         }

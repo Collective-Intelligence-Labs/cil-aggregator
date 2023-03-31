@@ -13,6 +13,14 @@ namespace OmniChain
             return msg;
         }
 
+        public static InfrastructureEvent DeserializeInfrastructureEvent(byte[] data)
+        {
+            var msg = new InfrastructureEvent();
+            msg.MergeFrom(data);
+            return msg;
+        }
+
+
         public static IMessage DeserializeEvent(DomainEvent e)
         {
             DomainEventType messageType = (DomainEventType)e.EvntType;

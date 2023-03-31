@@ -1,3 +1,5 @@
+using Google.Protobuf.WellKnownTypes;
+
 namespace Cila
 {
     public class BaseInfrastructureEvent
@@ -8,6 +10,6 @@ namespace Cila
 
         public string OperationId {get;set;}
 
-        public DateTime Happened { get; internal set; }
+        public Timestamp Happened { get; set; }
     }
 }

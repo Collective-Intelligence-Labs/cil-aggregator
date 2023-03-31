@@ -21,5 +21,17 @@ namespace Cila.Database {
         {
             return _client.GetDatabase("aggregator").GetCollection<OperationDocument>("opeations");
         }
+
+        public IEnumerable <OperationDocument> FindAllOperations()
+        {
+            var filter = Builders<OperationDocument>.Filter.Empty;
+            return GetOperations().Find(filter).ToList();
+        }
+
+        public OperationDocument? FindOne(string operationId)
+        {
+            var filter = Builders<OperationDocument>.Filter.Eq(x=> x.Id, operationId);
+            return GetOperations().Find(filter).FirstOrDefault();
+        }
     }
 }

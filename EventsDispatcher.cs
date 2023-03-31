@@ -26,7 +26,7 @@ namespace Cila
             var handlers = _subscriptions[msgType];
             foreach (var handler in handlers)
             {
-                var methodInfo = handler.GetType().GetMethod("Handle", new[] { msgType });
+                var methodInfo = handler.GetMethod("Handle", new[] { msgType });
                 var handlerInstance = serviceLocator.GetService(handler);
                 methodInfo.Invoke(handlerInstance, new [] { msg });
             }

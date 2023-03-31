@@ -50,15 +50,22 @@ internal class Program
             Acks = Acks.All
         };
 
-        var services = new ServiceCollection();
+        var services = builder.Services;
 
         // Register your dependencies here
-        services.AddScoped<IDatabase, MongoDatabase>();
         services.AddScoped<IServiceLocator,ServiceLocator>();
         services.AddSingleton(AppSettings);
         services.AddScoped<AggregatorService>();
-        services.AddScoped<EventsDispatcher>();
-  
+        services.AddSingleton<EventsDispatcher>();
+        services.AddSingleton(configProducer);
+        services.AddSingleton(configConsumer);
+
+        services.AddSingleton<KafkaConsumer>();
+        services.AddSingleton<KafkaProducer>();
+
+        services.AddTransient<InfrastructureEventsHandler>();
+        services.AddTransient<EventsHandler>();
+        services.AddTransient<MongoDatabase>();
     
         // Build the service provider
         
@@ -69,7 +76,9 @@ internal class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        
         builder.Services.AddHostedService<WorkerService>();
+        builder.Services.AddHostedService<MessageQueueWorkerService>();
       
 
         var app = builder.Build();

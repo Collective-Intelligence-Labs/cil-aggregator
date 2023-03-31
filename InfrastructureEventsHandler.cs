@@ -1,4 +1,6 @@
+using Cila.Database;
 using Cila.Documents;
+using Google.Protobuf.WellKnownTypes;
 using MongoDB.Driver;
 
 namespace Cila 
@@ -7,68 +9,49 @@ namespace Cila
     {
         private readonly IMongoCollection<OperationDocument> _operations;
 
-        public InfrastructureEventsHandler(IMongoCollection<OperationDocument> operations)
+        private MongoDatabase _db;
+        public InfrastructureEventsHandler(MongoDatabase db)
         {
-            _operations = operations;
+            _operations = db.GetOperations();
+            _db = db;
         }
 
-        public void Handle(ApplicationOperationInitiated e)
+        public void Handle(InfrastructureEvent e)
         {
-            var doc = new OperationDocument{
-                    Id = e.OperationId,
-                    Commands = e.Commands,
-                    Created = DateTime.Now,
-                    ClientID = e.SourceId,
-            };
+            if (e.EvntType == InfrastructureEventType.ApplicationOperationInitiatedEvent)
+            {
+                var doc = _db.FindOne(e.OperationId);
+                if (doc == null)
+                {
+                    doc = new OperationDocument{
+                        Id = e.OperationId,
+                        Commands = e.Commands.Select(x=> x.ToString()).ToList(),
+                        Created = DateTime.Now,
+                        ClientID = e.PortalId
+                 };
+                 _operations.InsertOne(doc);
+                };
+            }
             var infEv = CreateNewInfrastructureEvent(e);
-            infEv.Type = InfrastructureEventType.ApplicattionOperationInitiated;
-            doc.InfrastructureEvents.Add(infEv);
-            _operations.InsertOne(doc);
+            InsertNewEvent(e.OperationId, infEv);    
         }
 
-        public void Handle(EventsPushedNoConflict e)
+        private InfrastructureEventItem CreateNewInfrastructureEvent(InfrastructureEvent e)
         {
-            var inEv = CreateNewInfrastructureEvent(e);
-            inEv.Type = InfrastructureEventType.EventsPushedNoConflict;
-            InsertNewEvent(e.OperationId,inEv);
-        }
-
-        public void Handle(EventsPushedWithConflict e)
-        {
-            var inEv = CreateNewInfrastructureEvent(e);
-            inEv.Type = InfrastructureEventType.EventsPushedWithConflict;
-            InsertNewEvent(e.OperationId,inEv);
-        }
-        public void Handle(RelayEventsTransmiited e)
-        {
-            var inEv = CreateNewInfrastructureEvent(e);
-            inEv.Type = InfrastructureEventType.EventsTrasmitted;
-            InsertNewEvent(e.OperationId,inEv);
-        }
-        public void Handle(TransactionExecuted e)
-        {
-            var inEv = CreateNewInfrastructureEvent(e);
-            inEv.Type = InfrastructureEventType.TransactionExecuted;
-            InsertNewEvent(e.OperationId,inEv);
-        }
-        public void Handle(TransactionRouted e)
-        {
-            var inEv = CreateNewInfrastructureEvent(e);
-            inEv.Type = InfrastructureEventType.TransactionRouted;
-            InsertNewEvent(e.OperationId,inEv);
-        }
-
-        private InfrastructureEvent CreateNewInfrastructureEvent(BaseInfrastructureEvent e)
-        {
-            return new InfrastructureEvent{
-                Originator = e.SourceId,
-                Happened = e.Happened,
-                ID = e.Id,
-                Message = e.ToString(),
+            return new InfrastructureEventItem{
+                PortalId = e.PortalId,
+                OperationId = e.OperationId,
+                AggreggatorId = e.AggregatorId,
+                RouterId = e.RouterId,
+                RelayId = e.RelayId,
+                EventId = e.Id,
+                DomainEvents = e.Events.Select(x=> x.Id).ToList(),
+                DomainCommands = e.Commands.Select(x=> x.Id).ToList(),
+                //Timestamp = e.Timestamp??ToDateTime()
             };
         }
 
-        private void InsertNewEvent(string operationId, InfrastructureEvent e)
+        private void InsertNewEvent(string operationId, InfrastructureEventItem e)
         {
             var builder = Builders<OperationDocument>.Update.AddToSet(x=> x.InfrastructureEvents,e);
             _operations.UpdateOne(x=> x.Id == operationId, builder);

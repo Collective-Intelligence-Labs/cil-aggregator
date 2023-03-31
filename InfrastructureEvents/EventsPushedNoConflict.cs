@@ -1,6 +1,6 @@
 namespace Cila
 {
-    public class EventsPushedNoConflict: BaseInfrastructureEvent
+    public class EventsPushed: BaseInfrastructureEvent
     {
         
     }

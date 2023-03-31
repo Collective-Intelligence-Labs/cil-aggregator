@@ -1,36 +1,28 @@
+using Cila.Database;
+using Cila.Documents;
 using Microsoft.AspNetCore.Mvc;
 
 namespace cil_aggregator.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class ItemsController : ControllerBase
+public class OperationsController : ControllerBase
 {
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+    private readonly MongoDatabase _db;
 
-    private readonly ILogger<ItemsController> _logger;
-
-    public ItemsController(ILogger<ItemsController> logger)
+    public OperationsController(MongoDatabase db)
     {
-        _logger = logger;
+        _db = db;
     }
 
-    [HttpGet(Name = "GetAllItems")]
-    public IEnumerable<ItemDto> Get()
+    [HttpGet(Name = "GetAll")]
+    public IEnumerable<OperationDocument> GetAl()
     {
-        return Enumerable.Range(1, 5).Select(index => new ItemDto
-        {
-            Hash = DateOnly.FromDateTime(DateTime.Now.AddDays(index)).ToShortDateString(),
-            Owner = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+        return _db.FindAllOperations();
     }
 }
 
-public class ItemDto
+public class NftDto
 {
     public string Hash { get; set; }
     
