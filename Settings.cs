@@ -10,6 +10,8 @@ namespace Cila
 
         public List<ExecutionChainSettings> Chains {get;set;}
 
+        public string SingletonAggregateID { get; set; }
+
         public OmniChainAggregatorSettings()
         {
             Chains = new List<ExecutionChainSettings>();
@@ -25,8 +27,6 @@ namespace Cila
         public string Contract { get; set; }
 
         public string AbiFile {get;set;}
-
-        public string SingletonAggregateID { get; set; }
 
         private string _abi;
         public string Abi {get {

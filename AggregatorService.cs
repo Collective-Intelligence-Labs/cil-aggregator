@@ -29,7 +29,7 @@ namespace Cila
             foreach (var item in config.Chains)
             {
                 var chain1 = new ExecutionChain();
-                chain1.ChainService = new EthChainClient(item.Rpc,item.Contract,item.PrivateKey, item.Abi, item.SingletonAggregateID);
+                chain1.ChainService = new EthChainClient(item.Rpc,item.Contract,item.PrivateKey, item.Abi, config.SingletonAggregateID);
                 Console.WriteLine("Creating chain with RPC: {0}, Private Key: {2}, Contract: {1}", item.Rpc,item.Contract,item.PrivateKey);
                 _chains.Add(chain1);
             }
@@ -62,7 +62,6 @@ namespace Cila
                     });
                     _producer.ProduceAsync("infr", infEvent);
                 }
-                    
             }
             // find new events and dispatch them to events dispatcher
         }
