@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace cil_aggregator.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class OperationsController : ControllerBase
 {
     private readonly MongoDatabase _db;
@@ -20,6 +20,13 @@ public class OperationsController : ControllerBase
     {
         return _db.FindAllOperations();
     }
+
+    [HttpGet("{id}")]
+    public OperationDocument Get(string id)
+    {
+        return _db.FindOne(id);
+    }
+
 }
 
 public class NftDto

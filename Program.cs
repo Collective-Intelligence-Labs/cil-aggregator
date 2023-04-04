@@ -77,9 +77,10 @@ internal class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         
+        builder.Services.AddCors();
+        
         builder.Services.AddHostedService<WorkerService>();
         builder.Services.AddHostedService<MessageQueueWorkerService>();
-      
 
         var app = builder.Build();
 
@@ -90,12 +91,13 @@ internal class Program
             app.UseSwaggerUI();
         }
 
+        app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
 
         app.MapControllers();
-
+        
         app.Run();
     }
 }

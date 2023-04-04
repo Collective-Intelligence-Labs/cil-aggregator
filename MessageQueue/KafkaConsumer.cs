@@ -22,24 +22,25 @@ namespace Cila
 
         public async Task ConsumeAsync(string topic, CancellationToken cancellationToken)
         {
-            consumer.Subscribe(topic);
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
+            await Task.Factory.StartNew(()=> {
+                consumer.Subscribe(topic);
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    var consumeResult = consumer.Consume(cancellationToken);
-                    if (consumeResult != null && consumeResult.Message != null && consumeResult.Message.Value != null)
+                    try
                     {
-                        dispatcher.Dispatch(OmniChainSerializer.DeserializeInfrastructureEvent(consumeResult.Message.Value));
+                        var consumeResult = consumer.Consume(cancellationToken);
+                        if (consumeResult != null && consumeResult.Message != null && consumeResult.Message.Value != null)
+                        {
+                            dispatcher.Dispatch(OmniChainSerializer.DeserializeInfrastructureEvent(consumeResult.Message.Value));
+                        }
+                        //Console.WriteLine($"Consumed message '{consumeResult.Message.Value}' from topic {consumeResult.Topic}, partition {consumeResult.Partition}, offset {consumeResult.Offset}");
                     }
-                    //Console.WriteLine($"Consumed message '{consumeResult.Message.Value}' from topic {consumeResult.Topic}, partition {consumeResult.Partition}, offset {consumeResult.Offset}");
+                    catch (ConsumeException ex)
+                    {
+                        Console.WriteLine($"Error occurred: {ex.Error.Reason}");
+                    }
                 }
-                catch (ConsumeException ex)
-                {
-                    Console.WriteLine($"Error occurred: {ex.Error.Reason}");
-                }
-            }
+            });
         }
 
         public void Dispose()

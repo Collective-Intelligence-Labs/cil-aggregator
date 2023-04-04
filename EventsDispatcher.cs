@@ -17,7 +17,7 @@ namespace Cila
         public void DispatchEvent(DomainEvent e){
 
             var msg = OmniChainSerializer.DeserializeEvent(e);
-            
+            Dispatch(msg);
         }
 
         public void Dispatch(object msg)

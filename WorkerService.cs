@@ -20,9 +20,8 @@ public class WorkerService : BackgroundService
         }
     }
 
-    private static Task PullEvents(AggregatorService aggregatorService)
+    private async Task PullEvents(AggregatorService aggregatorService)
     {
-        aggregatorService.PullNewEvents();
-        return Task.FromResult("Done");
+        await aggregatorService.PullNewEvents();
     }
 }

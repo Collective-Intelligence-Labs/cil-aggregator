@@ -19,7 +19,7 @@ namespace Cila.Database {
 
         public IMongoCollection<OperationDocument> GetOperations()
         {
-            return _client.GetDatabase("aggregator").GetCollection<OperationDocument>("opeations");
+            return _client.GetDatabase("aggregator").GetCollection<OperationDocument>("operations");
         }
 
         public IEnumerable <OperationDocument> FindAllOperations()
@@ -28,7 +28,7 @@ namespace Cila.Database {
             return GetOperations().Find(filter).ToList();
         }
 
-        public OperationDocument? FindOne(string operationId)
+        public OperationDocument FindOne(string operationId)
         {
             var filter = Builders<OperationDocument>.Filter.Eq(x=> x.Id, operationId);
             return GetOperations().Find(filter).FirstOrDefault();

@@ -18,8 +18,8 @@ namespace Cila
 
         public void Handle(InfrastructureEvent e)
         {
-            if (e.EvntType == InfrastructureEventType.ApplicationOperationInitiatedEvent)
-            {
+            //if (e.EvntType == InfrastructureEventType.ApplicationOperationInitiatedEvent)
+            //{
                 var doc = _db.FindOne(e.OperationId);
                 if (doc == null)
                 {
@@ -31,7 +31,7 @@ namespace Cila
                  };
                  _operations.InsertOne(doc);
                 };
-            }
+            //}
             var infEv = CreateNewInfrastructureEvent(e);
             InsertNewEvent(e.OperationId, infEv);    
         }

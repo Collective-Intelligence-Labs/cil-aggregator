@@ -1,6 +1,7 @@
 using Cila.OmniChain;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
+using MongoDB.Bson;
 using OmniChain;
 
 namespace Cila
@@ -35,7 +36,7 @@ namespace Cila
             }
         }
 
-        public void PullNewEvents()
+        public async Task PullNewEvents()
         {
             //fetch the latest state for each chains
             Console.WriteLine("Current active chains: {0}", _chains.Count);
@@ -47,20 +48,20 @@ namespace Cila
                 {
                     if (!_eventsHashes.Contains(e.GetHashCode()))
                     {
-                        _eventStore.Add(e);
                         _dispatcher.DispatchEvent(e);
+                        _eventStore.Add(e);
                     }
                     var infEvent = new InfrastructureEvent{
-                        Id = Guid.NewGuid().ToString(),
+                        Id = ObjectId.GenerateNewId().ToString(),
                         EvntType = InfrastructureEventType.EventsAggregatedEvent,
                         AggregatorId = Id,
-                        OperationId = Guid.NewGuid().ToString(),
+                        OperationId = "32ae8f52f407e48a89d",
                     };
                     infEvent.Events.Add( new DomainEventDto{
                             Id = e.EvntIdx.ToString(),
                             Timespan = Timestamp.FromDateTime(DateTime.UtcNow),
                     });
-                    _producer.ProduceAsync("infr", infEvent);
+                    await _producer.ProduceAsync("infr", infEvent);
                 }
             }
             // find new events and dispatch them to events dispatcher
