@@ -3,11 +3,17 @@ namespace Cila.Documents
     public class OperationDocument
     {
         public string Id {get;set;}
-
         public string ClientID {get;set;}
-
+        public string AggregateId {get;set;}
+        public string RouterId {get;set;}
         public DateTime Created {get;set;}
+        
         public List<string> Commands {get;set;}
+        public List<string> Events {get;set;}
+        public List<SyncItems> Routers {get;set;}
+        public List<SyncItems> Chains {get;set;}
+        public List<SyncItems> Relays {get;set;}
+        public List<SyncItems> Aggregators {get;set;}
         public List<InfrastructureEventItem> InfrastructureEvents {get;set;}
 
         public OperationDocument()
@@ -15,6 +21,26 @@ namespace Cila.Documents
             InfrastructureEvents  = new List<InfrastructureEventItem>();
             Commands = new List<string>();
         }
+    }
+
+    public class SyncItems
+    {
+        public string Id {get;set;}
+        public string Name {get;set;}
+        public SyncItemType Type {get;set;}
+        public bool Synced {get;set;}
+        public bool OriginalSource {get;set;}
+        public DateTime Timestamp {get;set;}
+    }
+
+    public enum SyncItemType
+    {
+        Router,
+        Portal,
+        Aggregator,
+        Relay,
+        Execution,
+        Core
     }
 
     public class InfrastructureEventItem {

@@ -7,7 +7,17 @@ namespace Cila.Database {
     {
         private MongoClient _client;
 
-        public MongoDatabase(OmniChainAggregatorSettings settings)
+        private const string _dbname = "aggregator";
+
+        private class Collections {
+            public static string Events  = "events";
+            public static string Subscriptions  = "subscriptions";
+            public static string Chains  = "chains";
+            public static string Executions  = "executions";
+            public static string AggregatedEvents = "aggregated-events";
+        }
+
+        public MongoDatabase(OmniChainSettings settings)
         {
             _client = new MongoClient(settings.MongoDBConnectionString);
         }
@@ -17,9 +27,25 @@ namespace Cila.Database {
             return _client.GetDatabase("relay").GetCollection<DomainEvent>("events");
         }
 
+        public IMongoCollection<AggregatedEventDocument> GetAggregatedEventsCollection()
+        {
+            return _client.GetDatabase(_dbname).GetCollection<AggregatedEventDocument>(Collections.AggregatedEvents);
+        }
+
         public IMongoCollection<OperationDocument> GetOperations()
         {
-            return _client.GetDatabase("aggregator").GetCollection<OperationDocument>("operations");
+            return _client.GetDatabase(_dbname).GetCollection<OperationDocument>("operations");
+        }
+
+        public IMongoCollection<NFTDocument> GetNfts()
+        {
+            return _client.GetDatabase(_dbname).GetCollection<NFTDocument>("nfts");
+        }
+
+
+        public IMongoCollection<ChainDocument> GetChainsCollection()
+        {
+            return _client.GetDatabase(_dbname).GetCollection<ChainDocument>(Collections.Chains);
         }
 
         public IEnumerable <OperationDocument> FindAllOperations()
@@ -33,5 +59,25 @@ namespace Cila.Database {
             var filter = Builders<OperationDocument>.Filter.Eq(x=> x.Id, operationId);
             return GetOperations().Find(filter).FirstOrDefault();
         }
+
+        public NFTDocument FindOneNft(string id)
+        {
+            var filter = Builders<NFTDocument>.Filter.Eq(x=> x.Id, id);
+            return GetNfts().Find(filter).FirstOrDefault();
+        }
+
+        public IEnumerable <NFTDocument> FindAllNfts(string ownerId)
+        {
+            var filter = Builders<NFTDocument>.Filter.Eq(x=> x.Owner, ownerId);
+            return GetNfts().Find(filter).ToList();
+        }
+
+
+        public IEnumerable <NFTDocument> FindAllNfts()
+        {
+            var filter = Builders<NFTDocument>.Filter.Empty;
+            return GetNfts().Find(filter).ToList();
+        }
+
     }
 }

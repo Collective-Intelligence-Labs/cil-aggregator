@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 internal class Program
 {
-    public  static OmniChainAggregatorSettings AppSettings {get;set;}
+    public static OmniChainSettings AppSettings {get;set;}
 
     public static ServiceProvider _serviceProvider;
 
@@ -18,7 +18,7 @@ internal class Program
         var cnfg = new ConfigurationBuilder();
         var configuration = cnfg.AddJsonFile("aggregatorsettings.json")
             .Build();
-        AppSettings = configuration.GetSection("AggregatorSettings").Get<OmniChainAggregatorSettings>();
+        AppSettings = configuration.GetSection("AggregatorSettings").Get<OmniChainSettings>();
 
         var configProducer = new ProducerConfig
         {
@@ -55,7 +55,11 @@ internal class Program
         // Register your dependencies here
         services.AddScoped<IServiceLocator,ServiceLocator>();
         services.AddSingleton(AppSettings);
-        services.AddScoped<AggregatorService>();
+        services.AddScoped<AggregatorService>()
+            .AddScoped<ChainsService>()
+            .AddScoped<AggregagtedEventsService>()
+            .AddScoped<ChainClientsFactory>();
+            
         services.AddSingleton<EventsDispatcher>();
         services.AddSingleton(configProducer);
         services.AddSingleton(configConsumer);
@@ -79,10 +83,15 @@ internal class Program
         
         builder.Services.AddCors();
         
-        builder.Services.AddHostedService<WorkerService>();
+        builder.Services.AddHostedService<AggregatorWorkerService>();
         builder.Services.AddHostedService<MessageQueueWorkerService>();
 
+        //Initialize chains in database
+        _serviceProvider.GetService<ChainsService>().InitializeFromSettings(AppSettings);
+
         var app = builder.Build();
+
+        
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

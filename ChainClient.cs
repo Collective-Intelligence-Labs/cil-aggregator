@@ -21,15 +21,11 @@ namespace Cila.OmniChain
         }
     }
 
-    interface IChainClient
+    public interface IChainClient
     {
-        void Push(ulong position, IEnumerable<DomainEvent> events);
-        Task<string> PushAsync(ulong position, IEnumerable<DomainEvent> events);
-        IEnumerable<DomainEvent> Pull(ulong position);
-        Task<IEnumerable<DomainEvent>> PullAsync(ulong position);
+        List<byte[]> Pull(ulong position, string aggregateId);
+        Task<List<byte[]>> PullAsync(ulong position, string aggregateId);
     }
-
-   
 
     [Function("pull")]
     public class PullFuncation: FunctionMessage
@@ -78,11 +74,7 @@ namespace Cila.OmniChain
         private NewFilterInput _filterInput;
         private string _privateKey;
 
-        private string _singletonAggregateId;
-
-        private Contract _contract;
-
-        public EthChainClient(string rpc, string contract, string privateKey, string abi, string singletonAggregateID)
+        public EthChainClient(string rpc, string contract, string privateKey)
         {
             
             _privateKey = privateKey;
@@ -90,9 +82,7 @@ namespace Cila.OmniChain
             _web3 = new Web3(account, rpc);
             _web3.Client.OverridingRequestInterceptor = new LoggingInterceptor();
             _handler = _web3.Eth.GetContractHandler(contract);
-            _contract = _web3.Eth.GetContract(abi, contract);
             _eventHandler = _handler.GetEvent<OmnichainEvent>();
-            _singletonAggregateId = singletonAggregateID;
             var block = _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync().Result;
             _filterInput = _eventHandler.CreateFilterInput(new BlockParameter(block.ToUlong() - 1024), BlockParameter.CreateLatest());
             //
@@ -100,32 +90,19 @@ namespace Cila.OmniChain
 
         public const int MAX_LIMIT = 1000000;
 
-        public async Task<IEnumerable<DomainEvent>> PullAsync(ulong position)
+        public async Task<List<byte[]>> PullAsync(ulong position, string aggregateId)
         {
-             Console.WriteLine("Chain Service Pull execution started from position: {0}, aggregate: {1}", position, _singletonAggregateId);
+             Console.WriteLine("Chain Service Pull execution started from position: {0}, aggregate: {1}", position, aggregateId);
              var handler = _handler.GetFunction<PullBytesFuncation>();
              var request = new PullBytesFuncation{
                 StartIndex = (int)position,
                     Limit = MAX_LIMIT,
-                    AggregateId = _singletonAggregateId
+                    AggregateId = aggregateId
                 };
                 var result =  await handler.CallAsync<PullEventsDTO>(request);
                 Console.WriteLine("Chain Service Pull executed: {0}", result);
                 //return result.Events;   
-                return result.Events.Select(x=> OmniChainSerializer.DeserializeDomainEvent(x));
-        }
-
-        public async Task<string> PushAsync(ulong position, IEnumerable<DomainEvent> events)
-        {
-            var handler = _handler.GetFunction<PushFuncation>();
-            var request = new PushFuncation{
-                Events = events.ToList(),
-                Position = (int)position,
-                AggregateId = _singletonAggregateId
-            };
-            var result = await handler.CallAsync<string>(request);
-            Console.WriteLine("Chain Service Push} executed: {0}", result);
-            return result;
+                return result.Events;
         }
 
         public DomainEvent Deserizlize(byte[] data)
@@ -133,14 +110,9 @@ namespace Cila.OmniChain
             return new DomainEvent();
         }
 
-        IEnumerable<DomainEvent> IChainClient.Pull(ulong position)
+        public List<byte[]> Pull(ulong position, string aggregateId)
         {
-            return PullAsync(position).GetAwaiter().GetResult();
-        }
-
-        void IChainClient.Push(ulong position, IEnumerable<DomainEvent> events)
-        {
-            PushAsync(position,events).GetAwaiter().GetResult();
+            return PullAsync(position, aggregateId).GetAwaiter().GetResult();
         }
     }
 

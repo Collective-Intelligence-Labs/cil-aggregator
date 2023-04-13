@@ -2,7 +2,7 @@ using MongoDB.Driver;
 
 namespace Cila
 {
-    public class OmniChainAggregatorSettings
+    public class OmniChainSettings
     {
         public  string MongoDBConnectionString {get;set;}
 
@@ -12,7 +12,7 @@ namespace Cila
 
         public string SingletonAggregateID { get; set; }
 
-        public OmniChainAggregatorSettings()
+        public OmniChainSettings()
         {
             Chains = new List<ExecutionChainSettings>();
         }
@@ -21,6 +21,8 @@ namespace Cila
     public class ExecutionChainSettings
     {
         public string Rpc { get; set; } 
+
+        public string Id {get;set;}
 
         public string PrivateKey { get; set; }  
 

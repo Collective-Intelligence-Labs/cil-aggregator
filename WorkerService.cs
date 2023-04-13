@@ -1,11 +1,11 @@
 using Cila;
 
-public class WorkerService : BackgroundService
+public class AggregatorWorkerService : BackgroundService
 {
     private const int generalDelay = 1 * 5 * 1000; // 5 seconds
     private readonly IServiceLocator _locator;
 
-    public WorkerService()
+    public AggregatorWorkerService()
     {
         this._locator =  new ServiceLocator(Program._serviceProvider);
     }
@@ -22,6 +22,6 @@ public class WorkerService : BackgroundService
 
     private async Task PullEvents(AggregatorService aggregatorService)
     {
-        await aggregatorService.PullNewEvents();
+        await aggregatorService.Aggregate();
     }
 }

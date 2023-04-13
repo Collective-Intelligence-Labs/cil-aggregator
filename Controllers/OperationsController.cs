@@ -26,7 +26,6 @@ public class OperationsController : ControllerBase
     {
         return _db.FindOne(id);
     }
-
 }
 
 public class NftDto
