@@ -1,6 +1,6 @@
+using System.Linq.Expressions;
 using Cila.Database;
 using Cila.Documents;
-using Google.Protobuf.WellKnownTypes;
 using MongoDB.Driver;
 
 namespace Cila 
@@ -33,7 +33,27 @@ namespace Cila
                 };
             //}
             var infEv = CreateNewInfrastructureEvent(e);
-            InsertNewEvent(e.OperationId, infEv);    
+            InsertNewEvent(e.OperationId, infEv);
+
+            var syncItem = new SyncItems {
+
+            };
+
+            switch(infEv.Type)
+            {
+                case InfrastructureEventType.TransactionRoutedEvent:
+                    InsertNewSyncItem(e.OperationId, x=> x.Routers, syncItem);
+                    break;
+                case InfrastructureEventType.EventsAggregatedEvent:
+                    InsertNewSyncItem(e.OperationId, x=> x.Chains, syncItem);
+                    InsertNewSyncItem(e.OperationId, x=> x.Aggregators, syncItem);
+                    break;
+                case InfrastructureEventType.RelayEventsTransmiitedEvent:
+                    InsertNewSyncItem(e.OperationId, x=> x.Relays, syncItem);
+                    break;
+                default:
+                    return; 
+            }
         }
 
         private InfrastructureEventItem CreateNewInfrastructureEvent(InfrastructureEvent e)
@@ -54,6 +74,12 @@ namespace Cila
         private void InsertNewEvent(string operationId, InfrastructureEventItem e)
         {
             var builder = Builders<OperationDocument>.Update.AddToSet(x=> x.InfrastructureEvents,e);
+            _operations.UpdateOne(x=> x.Id == operationId, builder);
+        }
+
+        private void InsertNewSyncItem(string operationId, Expression<Func<OperationDocument, IEnumerable<SyncItems>>> itemSelector, SyncItems item)
+        {
+            var builder = Builders<OperationDocument>.Update.AddToSet(itemSelector, item);
             _operations.UpdateOne(x=> x.Id == operationId, builder);
         }
     }

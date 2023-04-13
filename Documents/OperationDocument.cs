@@ -7,7 +7,6 @@ namespace Cila.Documents
         public string AggregateId {get;set;}
         public string RouterId {get;set;}
         public DateTime Created {get;set;}
-        
         public List<string> Commands {get;set;}
         public List<string> Events {get;set;}
         public List<SyncItems> Routers {get;set;}
@@ -27,20 +26,9 @@ namespace Cila.Documents
     {
         public string Id {get;set;}
         public string Name {get;set;}
-        public SyncItemType Type {get;set;}
         public bool Synced {get;set;}
         public bool OriginalSource {get;set;}
         public DateTime Timestamp {get;set;}
-    }
-
-    public enum SyncItemType
-    {
-        Router,
-        Portal,
-        Aggregator,
-        Relay,
-        Execution,
-        Core
     }
 
     public class InfrastructureEventItem {

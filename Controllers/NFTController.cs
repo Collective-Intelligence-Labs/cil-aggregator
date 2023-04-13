@@ -8,29 +8,29 @@ namespace cil_aggregator.Controllers;
 [Route("api/[controller]")]
 public class NftController : ControllerBase
 {
-    private readonly MongoDatabase _db;
+    private readonly NftService nftService;
 
-    public NftController(MongoDatabase db)
+    public NftController(NftService nftService)
     {
-        _db = db;
+        this.nftService = nftService;
     }
 
     [HttpGet]
     public IEnumerable<NFTDocument> GetAll()
     {
-        return _db.FindAllNfts();
+        return nftService.FindAllNfts();
     }
 
     [HttpGet("{id}")]
     public NFTDocument Get(string id)
     {
-        return _db.FindOneNft(id);
+        return nftService.FindOneNft(id);
     }
 
     [HttpGet("/owner/{id}")]
     public IEnumerable<NFTDocument> GetByOwner(string id)
     {
-        return _db.FindAllNfts(id);
+        return nftService.FindAllNfts(id);
     }
 
 }

@@ -33,7 +33,8 @@ namespace Cila
             var chains = chainsService.GetAll();
             //fetch the latest state for each chains
             Console.WriteLine("Current active chains: {0}", chains.Count);
-            foreach (var chain in chains)
+
+            await Parallel.ForEachAsync(chains, async (chain, cancellationToken) =>
             {
                 //var current = chain.LastSyncedBlock;
                 var current = aggregagtedEventsService.GetLastVersion(config.SingletonAggregateID);
@@ -87,7 +88,7 @@ namespace Cila
                         await _producer.ProduceAsync("infr", infEvent);
                     }
                 }
-            }
+            });
             // find new events and dispatch them to events dispatcher
         }
     }

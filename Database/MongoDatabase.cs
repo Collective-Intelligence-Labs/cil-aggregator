@@ -60,24 +60,5 @@ namespace Cila.Database {
             return GetOperations().Find(filter).FirstOrDefault();
         }
 
-        public NFTDocument FindOneNft(string id)
-        {
-            var filter = Builders<NFTDocument>.Filter.Eq(x=> x.Id, id);
-            return GetNfts().Find(filter).FirstOrDefault();
-        }
-
-        public IEnumerable <NFTDocument> FindAllNfts(string ownerId)
-        {
-            var filter = Builders<NFTDocument>.Filter.Eq(x=> x.Owner, ownerId);
-            return GetNfts().Find(filter).ToList();
-        }
-
-
-        public IEnumerable <NFTDocument> FindAllNfts()
-        {
-            var filter = Builders<NFTDocument>.Filter.Empty;
-            return GetNfts().Find(filter).ToList();
-        }
-
     }
 }
