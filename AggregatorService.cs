@@ -38,7 +38,7 @@ namespace Cila
             {
                 //var current = chain.LastSyncedBlock;
                 var current = aggregagtedEventsService.GetLastVersion(config.SingletonAggregateID);
-                var next = current + 1;
+                var next = current != null ? current.Value + 1 : 0;
                 var client = chainClientsFactory.GetChainClient(chain);
                 // Should be replace by pulling from block number
                 var newEvents =  await client.PullAsync(next, config.SingletonAggregateID);
@@ -75,7 +75,9 @@ namespace Cila
                             Id = ObjectId.GenerateNewId().ToString(),
                             EvntType = InfrastructureEventType.EventsAggregatedEvent,
                             AggregatorId = Id,
-                            OperationId = e.OperaionId
+                            OperationId = e.OperaionId,
+                            // Add chain ID to the event as well
+                            CoreId = chain.Id
                         };
                         infEvent.Events.Add( new DomainEventDto{
                                 Id = e.Hash,
@@ -85,6 +87,9 @@ namespace Cila
                                 SourceId = chain.Id,
                                 Conflict = conflict
                         });
+                        await _producer.ProduceAsync("infr", infEvent);
+                        // mock Execution chain event here
+                        infEvent.EvntType = InfrastructureEventType.TransactionExecutedEvent;
                         await _producer.ProduceAsync("infr", infEvent);
                     }
                 }

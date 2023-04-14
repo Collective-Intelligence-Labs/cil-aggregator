@@ -31,9 +31,9 @@ public class AggregagtedEventsService
         _events.InsertOne(aggregatedEventDocument);
     }
 
-    public ulong GetLastVersion(string aggregateID)
+    public ulong? GetLastVersion(string aggregateID)
     {
         var lastEvent = _events.Find(x=> x.AggregateId == aggregateID).SortByDescending(x=>x.Version).FirstOrDefault();
-        return lastEvent != null ? lastEvent.Version : 0;
+        return lastEvent != null ? lastEvent.Version : null;
     }
 }

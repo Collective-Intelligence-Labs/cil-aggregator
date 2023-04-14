@@ -19,6 +19,11 @@ namespace Cila.Documents
         {
             InfrastructureEvents  = new List<InfrastructureEventItem>();
             Commands = new List<string>();
+            Relays = new List<SyncItems>();
+            Chains = new List<SyncItems>();
+            Aggregators = new List<SyncItems>();
+            Routers = new List<SyncItems>();
+            Events = new List<string>();
         }
     }
 
@@ -26,7 +31,6 @@ namespace Cila.Documents
     {
         public string Id {get;set;}
         public string Name {get;set;}
-        public bool Synced {get;set;}
         public bool OriginalSource {get;set;}
         public DateTime Timestamp {get;set;}
     }

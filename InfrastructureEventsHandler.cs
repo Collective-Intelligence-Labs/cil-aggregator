@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Cila.Database;
 using Cila.Documents;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Cila 
@@ -33,27 +34,40 @@ namespace Cila
                 };
             //}
             var infEv = CreateNewInfrastructureEvent(e);
-            InsertNewEvent(e.OperationId, infEv);
-
+       
             var syncItem = new SyncItems {
-
+                Timestamp = DateTime.UtcNow,
+                OriginalSource = !e.Events.Any(x=> x.Conflict)
             };
 
-            switch(infEv.Type)
+            switch(e.EvntType)
             {
                 case InfrastructureEventType.TransactionRoutedEvent:
-                    InsertNewSyncItem(e.OperationId, x=> x.Routers, syncItem);
+                    syncItem.Id = e.RouterId;
+                    syncItem.Name = "Router " + syncItem.Id;
+                    InsertNewSyncItem(doc, x=> x.Routers, syncItem);
                     break;
                 case InfrastructureEventType.EventsAggregatedEvent:
-                    InsertNewSyncItem(e.OperationId, x=> x.Chains, syncItem);
-                    InsertNewSyncItem(e.OperationId, x=> x.Aggregators, syncItem);
+                    syncItem.Id = e.AggregatorId;
+                    syncItem.Name = "Aggregator " + syncItem.Id;
+                    InsertNewSyncItem(doc, x=> x.Aggregators, syncItem);
+                    break;
+                case InfrastructureEventType.TransactionExecutedEvent:
+                    syncItem.Id = e.CoreId;
+                    syncItem.Name = "Chain " + syncItem.Id;
+                    InsertNewSyncItem(doc, x=> x.Chains, syncItem);
                     break;
                 case InfrastructureEventType.RelayEventsTransmiitedEvent:
-                    InsertNewSyncItem(e.OperationId, x=> x.Relays, syncItem);
+                    syncItem.Id = e.CoreId;
+                    syncItem.Name = "Relay " + syncItem.Id;
+                    InsertNewSyncItem(doc, x=> x.Relays, syncItem);
                     break;
                 default:
                     return; 
             }
+
+            InsertNewEvent(e.OperationId, infEv);
+
         }
 
         private InfrastructureEventItem CreateNewInfrastructureEvent(InfrastructureEvent e)
@@ -67,6 +81,7 @@ namespace Cila
                 EventId = e.Id,
                 DomainEvents = e.Events.Select(x=> x.Id).ToList(),
                 DomainCommands = e.Commands.Select(x=> x.Id).ToList(),
+                Type = e.EvntType
                 //Timestamp = e.Timestamp??ToDateTime()
             };
         }
@@ -81,6 +96,15 @@ namespace Cila
         {
             var builder = Builders<OperationDocument>.Update.AddToSet(itemSelector, item);
             _operations.UpdateOne(x=> x.Id == operationId, builder);
+        }
+        private void InsertNewSyncItem(OperationDocument doc, Expression<Func<OperationDocument, List<SyncItems>>> itemSelector, SyncItems item)
+        {
+            var items = itemSelector.Compile()(doc);
+            if (!items.Any(x=> x.Id == item.Id))
+            {
+                items.Add(item);
+                _operations.ReplaceOne(x=> x.Id == doc.Id, doc);
+            }
         }
     }
 }
