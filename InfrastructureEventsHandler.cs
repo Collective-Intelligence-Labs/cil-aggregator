@@ -37,7 +37,8 @@ namespace Cila
        
             var syncItem = new SyncItems {
                 Timestamp = DateTime.UtcNow,
-                OriginalSource = !e.Events.Any(x=> x.Conflict)
+                OriginalSource = !e.Events.Any(x=> x.Conflict),
+                ErrorMessage = e.ErrorMessage 
             };
 
             switch(e.EvntType)
@@ -53,12 +54,12 @@ namespace Cila
                     InsertNewSyncItem(doc, x=> x.Aggregators, syncItem);
                     break;
                 case InfrastructureEventType.TransactionExecutedEvent:
-                    syncItem.Id = e.CoreId;
+                    syncItem.Id = e.ChainId;
                     syncItem.Name = "Chain " + syncItem.Id;
                     InsertNewSyncItem(doc, x=> x.Chains, syncItem);
                     break;
                 case InfrastructureEventType.RelayEventsTransmiitedEvent:
-                    syncItem.Id = e.CoreId;
+                    syncItem.Id = e.RelayId;
                     syncItem.Name = "Relay " + syncItem.Id;
                     InsertNewSyncItem(doc, x=> x.Relays, syncItem);
                     break;
@@ -100,7 +101,7 @@ namespace Cila
         private void InsertNewSyncItem(OperationDocument doc, Expression<Func<OperationDocument, List<SyncItems>>> itemSelector, SyncItems item)
         {
             var items = itemSelector.Compile()(doc);
-            if (!items.Any(x=> x.Id == item.Id))
+            if (!items.Any(x=> x.Id == item.Id && x.ErrorMessage == item.ErrorMessage))
             {
                 items.Add(item);
                 _operations.ReplaceOne(x=> x.Id == doc.Id, doc);

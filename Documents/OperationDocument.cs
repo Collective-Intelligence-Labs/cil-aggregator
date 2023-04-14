@@ -33,6 +33,7 @@ namespace Cila.Documents
         public string Name {get;set;}
         public bool OriginalSource {get;set;}
         public DateTime Timestamp {get;set;}
+        public string ErrorMessage {get;set;}
     }
 
     public class InfrastructureEventItem {

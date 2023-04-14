@@ -76,8 +76,7 @@ namespace Cila
                             EvntType = InfrastructureEventType.EventsAggregatedEvent,
                             AggregatorId = Id,
                             OperationId = e.OperaionId,
-                            // Add chain ID to the event as well
-                            CoreId = chain.Id
+                            ChainId = chain.Id
                         };
                         infEvent.Events.Add( new DomainEventDto{
                                 Id = e.Hash,
