@@ -1,5 +1,6 @@
 using Cila;
 using Cila.Database;
+using Cila.Documents;
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -70,6 +71,7 @@ internal class Program
         services.AddTransient<InfrastructureEventsHandler>();
         services.AddTransient<EventsHandler>();
         services.AddTransient<MongoDatabase>();
+        services.AddSingleton<NftService>();
     
         // Build the service provider
         
