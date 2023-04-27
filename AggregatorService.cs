@@ -15,8 +15,8 @@ namespace Cila
         private readonly ChainsService chainsService;
         private readonly AggregagtedEventsService aggregagtedEventsService;
 
-        public AggregatorService(OmniChainSettings config, EventsDispatcher dispatcher, 
-        ChainClientsFactory chainClientsFactory, KafkaProducer producer, ChainsService chainsService, 
+        public AggregatorService(OmniChainSettings config, EventsDispatcher dispatcher,
+        ChainClientsFactory chainClientsFactory, KafkaProducer producer, ChainsService chainsService,
         AggregagtedEventsService aggregagtedEventsService)
         {
             this.config = config;
@@ -41,19 +41,21 @@ namespace Cila
                 var next = current != null ? current.Value + 1 : 0;
                 var client = chainClientsFactory.GetChainClient(chain);
                 // Should be replace by pulling from block number
-                var newEvents =  await client.PullAsync(next, config.SingletonAggregateID);
-                var aggregatedEvents = newEvents.Select(x=> {
+                var newEvents = await client.PullAsync(next, config.SingletonAggregateID);
+                var aggregatedEvents = newEvents.Select(x =>
+                {
                     var domainEvent = OmniChainSerializer.DeserializeDomainEvent(x);
-                    return new AggregatedEvent{
-                    DomainEvent = domainEvent,
-                    Payload = x,
-                    AggregateId = config.SingletonAggregateID, // replace with real aggregate ID
-                    ChainId = chain.Id,
-                    OperaionId = config.SingletonAggregateID + domainEvent.EvntIdx,
-                    CommandId = config.SingletonAggregateID + domainEvent.EvntIdx,
-                    BlockNumber = domainEvent.EvntIdx, //replace with block number,
-                    BlockHash = null // should be repalced with real one
-                     }; 
+                    return new AggregatedEvent
+                    {
+                        DomainEvent = domainEvent,
+                        Payload = x,
+                        AggregateId = config.SingletonAggregateID, // replace with real aggregate ID
+                        ChainId = chain.Id,
+                        OperaionId = config.SingletonAggregateID + domainEvent.EvntIdx,
+                        CommandId = config.SingletonAggregateID + domainEvent.EvntIdx,
+                        BlockNumber = domainEvent.EvntIdx, //replace with block number,
+                        BlockHash = null // should be repalced with real one
+                    };
                 });
                 foreach (var e in aggregatedEvents)
                 {
@@ -68,28 +70,28 @@ namespace Cila
                     {
                         _dispatcher.DispatchEvent(e.DomainEvent);
                     }
-                    if (!existingEvents.Any(x=> x.ChainId == chain.Id))
+                    if (!existingEvents.Any(x => x.ChainId == chain.Id))
                     {
                         aggregagtedEventsService.AddEvent(new AggregatedEventDocument(e));
-                        var infEvent = new InfrastructureEvent{
+                        var infEvent = new InfrastructureEvent
+                        {
                             Id = ObjectId.GenerateNewId().ToString(),
                             EvntType = InfrastructureEventType.EventsAggregatedEvent,
-                            AggregatorId = Id,
-                            OperationId = e.OperaionId,
-                            ChainId = chain.Id
+                            AggregatorId = this.Id,
+                            OperationId = e.OperaionId ?? (e.AggregateId + e.Version),
+                            ChainId = chain.Id,
+                            Timestamp = Timestamp.FromDateTime(DateTime.UtcNow)
                         };
-                        infEvent.Events.Add( new DomainEventDto{
-                                Id = e.Hash,
-                                Timespan = Timestamp.FromDateTime(DateTime.UtcNow),
-                                AggregateId = e.AggregateId,
-                                CommandId = e.CommandId,
-                                SourceId = chain.Id,
-                                Conflict = conflict
+                        infEvent.Events.Add(new DomainEventDto
+                        {
+                            Id = e.Hash,
+                            Timespan = Timestamp.FromDateTime(DateTime.UtcNow),
+                            AggregateId = e.AggregateId,
+                            CommandId = e.CommandId,
+                            SourceId = chain.Id,
+                            Conflict = conflict
                         });
-                        await _producer.ProduceAsync("infr", infEvent);
-                        // mock Execution chain event here
-                        infEvent.EvntType = InfrastructureEventType.TransactionExecutedEvent;
-                        await _producer.ProduceAsync("infr", infEvent);
+                        //await _producer.ProduceAsync("infr", infEvent);
                     }
                 }
             });

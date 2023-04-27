@@ -1,6 +1,6 @@
 {
   "AggregatorSettings": {
-    "AggregatorId": "ID",
+    "AggregatorId": "1Cc8D40bDca10E1CfaF809648A25a7172fa61704",
     "SingletonAggregateID": "8863F36E552Fd66296C0b3a3D2e4028105226DB7",
     "MongoDBConnectionString": "mongodb://localhost:27017",
     "Chains": [
@@ -9,21 +9,21 @@
         "PrivateKey": "a813851a121a15c924f24d4a2a316f6a0635714c05f939c5e760c22b45647d13",
         "Contract": "0xd1Be6e00EE9f4195eabAbbBBBD28a173D6064C3c",
         "AbiFile": "contract.json",
-        "Id": "1"
+        "Id": "5"
       },
       {
         "Rpc": "https://rpc.sepolia.org/",
         "PrivateKey": "a813851a121a15c924f24d4a2a316f6a0635714c05f939c5e760c22b45647d13",
         "Contract": "0xd1Be6e00EE9f4195eabAbbBBBD28a173D6064C3c",
         "AbiFile": "contract.json",
-        "Id": "2"
+        "Id": "11155111"
       },
       {
         "Rpc": "https://testnet.aurora.dev",
         "PrivateKey": "a813851a121a15c924f24d4a2a316f6a0635714c05f939c5e760c22b45647d13",
         "Contract": "0x9A5D2Bb4EDFC10d1b4fb0Fd8677EBa06ba9E0A40",
         "AbiFile": "contract.json",
-        "Id": "3"
+        "Id": "1313161555"
       }
     ]
   }

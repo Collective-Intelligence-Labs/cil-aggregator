@@ -51,6 +51,8 @@ namespace Cila.Documents
 
         public string CoreId {get;set;}
 
+        public string ChainId { get; set; }
+
         public string AggreggatorId {get;set;}
 
         public string OperationId {get;set;}

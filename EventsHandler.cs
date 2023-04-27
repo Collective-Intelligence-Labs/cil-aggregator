@@ -5,6 +5,7 @@ using Cila.Database;
 using Cila.Documents;
 using Google.Protobuf;
 using MongoDB.Driver;
+using Nethereum.Util;
 
 public class EventsHandler: IEventHandler
 {
@@ -19,12 +20,11 @@ public class EventsHandler: IEventHandler
         var nfts = _database.GetNfts();
         var id = GetId(e.Hash, e.Owner);
         try
-        {
-            
+        {   
             nfts.InsertOne(new NFTDocument{
                 Id = id,
-                Hash = e.Hash.ToBase64(),
-                Owner = e.Owner.ToBase64()
+                Hash = ByteStringToHexString(e.Hash),
+                Owner = ByteStringToHexString(e.Owner)
             });
         }
         catch (MongoWriteException ex)
@@ -36,7 +36,7 @@ public class EventsHandler: IEventHandler
     public void Handle(NFTTransferedPayload e)
     {
         var nfts = _database.GetNfts();
-        var builder = Builders<NFTDocument>.Update.Set(x=> x.Owner,e.To.ToBase64());
+        var builder = Builders<NFTDocument>.Update.Set(x=> x.Owner, ByteStringToHexString(e.To));
         nfts.UpdateOne(x=> x.Id == GetId(e.Hash, e.From), builder);
     }
 
@@ -49,4 +49,12 @@ public class EventsHandler: IEventHandler
             return Convert.ToBase64String(hashBytes);
         }
     }
+
+    private string ByteStringToHexString(ByteString bs)
+    {
+        var bytes = bs.ToByteArray();
+        return BitConverter.ToString(bytes).Replace("-", "");
+    }
+
+    
 }

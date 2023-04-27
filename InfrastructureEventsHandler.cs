@@ -26,7 +26,7 @@ namespace Cila
                 {
                     doc = new OperationDocument{
                         Id = e.OperationId,
-                        Commands = e.Commands.Select(x=> x.ToString()).ToList(),
+                        Commands = e.Commands.Select(x=> string.Format("{0} ==> aggregate: {1}", x.Id, x.AggregateId)).ToList(),
                         Created = DateTime.Now,
                         ClientID = e.PortalId
                  };
@@ -36,7 +36,7 @@ namespace Cila
             var infEv = CreateNewInfrastructureEvent(e);
        
             var syncItem = new SyncItems {
-                Timestamp = DateTime.UtcNow,
+                Timestamp = e.Timestamp.ToDateTime(),
                 OriginalSource = !e.Events.Any(x=> x.Conflict),
                 ErrorMessage = e.ErrorMessage 
             };
@@ -80,10 +80,12 @@ namespace Cila
                 RouterId = e.RouterId,
                 RelayId = e.RelayId,
                 EventId = e.Id,
-                DomainEvents = e.Events.Select(x=> x.Id).ToList(),
-                DomainCommands = e.Commands.Select(x=> x.Id).ToList(),
-                Type = e.EvntType
-                //Timestamp = e.Timestamp??ToDateTime()
+                ChainId = e.ChainId,
+                CoreId = e.CoreId,
+                DomainEvents = e.Events.Select(x=> x.ToJson()).ToList(),
+                DomainCommands = e.Commands.Select(x=> x.ToJson()).ToList(),
+                Type = e.EvntType,
+                Timestamp = e.Timestamp.ToDateTime()
             };
         }
 
