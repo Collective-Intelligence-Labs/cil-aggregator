@@ -27,7 +27,7 @@ namespace Cila
                     doc = new OperationDocument{
                         Id = e.OperationId,
                         Commands = e.Commands.Select(x=> x.Id).ToList(),
-                        Created = DateTime.Now,
+                        Created = e.Timestamp.ToDateTime(),
                         ClientID = e.PortalId
                  };
                  _operations.InsertOne(doc);
