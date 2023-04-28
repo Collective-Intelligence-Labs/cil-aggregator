@@ -65,8 +65,10 @@ namespace Cila
                     InsertNewSyncItem(doc, x=> x.Relays, syncItem);
                     UpdateChainStatus(doc, e.ChainId, ChainStatus.InSync);
                     break;
+                case InfrastructureEventType.ApplicationOperationInitiatedEvent:
+                    break;
                 default:
-                    return; 
+                    break; 
             }
 
             InsertNewEvent(e.OperationId, infEv);
