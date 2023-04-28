@@ -91,7 +91,7 @@ namespace Cila
                             SourceId = chain.Id,
                             Conflict = conflict
                         });
-                        //await _producer.ProduceAsync("infr", infEvent);
+                        await _producer.ProduceAsync("infr", infEvent);
                     }
                 }
             });

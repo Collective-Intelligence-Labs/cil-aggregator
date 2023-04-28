@@ -26,7 +26,7 @@ namespace Cila
                 {
                     doc = new OperationDocument{
                         Id = e.OperationId,
-                        Commands = e.Commands.Select(x=> string.Format("{0} ==> aggregate: {1}", x.Id, x.AggregateId)).ToList(),
+                        Commands = e.Commands.Select(x=> x.Id).ToList(),
                         Created = DateTime.Now,
                         ClientID = e.PortalId
                  };
@@ -57,11 +57,13 @@ namespace Cila
                     syncItem.Id = e.ChainId;
                     syncItem.Name = "Chain " + syncItem.Id;
                     InsertNewSyncItem(doc, x=> x.Chains, syncItem);
+                    UpdateChainStatus(doc, e.ChainId, ChainStatus.Synced);
                     break;
                 case InfrastructureEventType.RelayEventsTransmiitedEvent:
                     syncItem.Id = e.RelayId;
                     syncItem.Name = "Relay " + syncItem.Id;
                     InsertNewSyncItem(doc, x=> x.Relays, syncItem);
+                    UpdateChainStatus(doc, e.ChainId, ChainStatus.InSync);
                     break;
                 default:
                     return; 
@@ -108,6 +110,21 @@ namespace Cila
                 items.Add(item);
                 _operations.ReplaceOne(x=> x.Id == doc.Id, doc);
             }
+        }
+
+        private void UpdateChainStatus(OperationDocument doc, string chainId, ChainStatus status)
+        {
+            var perChainStatus = doc.PerChainStatus;
+            foreach (var s in perChainStatus)
+            {
+                if (s.ChainId == chainId)
+                {
+                    s.Status = status;
+                }
+            }
+            
+            var builder = Builders<OperationDocument>.Update.Set(x => x.PerChainStatus, perChainStatus);
+            _operations.UpdateOne(x => x.Id == doc.Id, builder);
         }
     }
 }
